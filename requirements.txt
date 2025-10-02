@@ -1,0 +1,10 @@
+streamlit
+torch
+torchvision
+numpy
+Pillow
+opencv-python-headless
+albumentations
+scikit-image
+matplotlib
+tqdm
