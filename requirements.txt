@@ -8,3 +8,4 @@ albumentations
 scikit-image
 matplotlib
 tqdm
+streamlit-image-comparison==0.0.4
