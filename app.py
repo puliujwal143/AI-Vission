@@ -472,15 +472,19 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # === Centered Banner Image ===
+with open("img.png", "rb") as f:
+    data = f.read()
+b64 = base64.b64encode(data).decode()
 st.markdown(
-    """
-    <div style='text-align: center; margin-top: 20px;'>
-        <img src='img.png' width='320' alt='AI Powered Segmentation'/>
-        <p style='margin-top: 5px; font-style: italic;'>AI Powered Segmentation</p>
+    f"""
+    <div style='text-align:center; margin-top:20px;'>
+        <img src='data:image/png;base64,{b64}' width='300'/>
+        <p style='color:#ccc; margin-top:5px;'>AI Powered Segmentation</p>
     </div>
     """,
     unsafe_allow_html=True
 )
+
 
 # ================= Sidebar Options =================
 st.sidebar.markdown("### ⚙️ Segmentation Settings")
