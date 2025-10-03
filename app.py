@@ -9,45 +9,362 @@ from io import BytesIO
 from streamlit_image_comparison import image_comparison
 import zipfile
 import time
-import base64
 
 # ================= Device =================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# ================= Custom CSS =================
+# ================= Enhanced Custom CSS =================
 st.markdown("""
 <style>
-    .stApp {
-        background: linear-gradient(135deg, #141e30, #243b55);
-        color: white;
-        font-family: 'Segoe UI', sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+/* Root variables for smooth theme transitions */
+:root {
+    --transition-speed: 0.4s;
+    --shadow-light: 0 8px 32px rgba(0,0,0,0.08);
+    --shadow-medium: 0 12px 48px rgba(0,0,0,0.12);
+    --shadow-heavy: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+/* Global smooth transitions */
+* {
+    transition: background-color var(--transition-speed) ease,
+                color var(--transition-speed) ease,
+                border-color var(--transition-speed) ease,
+                box-shadow var(--transition-speed) ease,
+                transform 0.3s ease;
+}
+
+/* Light mode */
+@media (prefers-color-scheme: light) {
+    .stApp { 
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f1f3f5 100%);
+        color: #212529;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    .hero {
+    
+    .hero { 
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid rgba(230,57,70,0.1);
+        box-shadow: var(--shadow-medium);
+        border-radius: 24px;
+        padding: 3rem 2rem;
         text-align: center;
-        padding: 1.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
     }
-    .hero h1 {
-        font-size: 2.5rem;
-        color: #ff4b4b;
+    
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(230,57,70,0.05) 0%, transparent 70%);
+        animation: pulse 8s ease-in-out infinite;
+    }
+    
+    .hero h1 { 
+        background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 3rem;
+        font-weight: 800;
         margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+        position: relative;
+        z-index: 1;
     }
-    .hero p {
+    
+    .hero p { 
+        color: #6c757d;
         font-size: 1.2rem;
-        opacity: 0.9;
+        font-weight: 400;
+        position: relative;
+        z-index: 1;
+        letter-spacing: 0.01em;
     }
-    .stButton > button {
-        background: linear-gradient(45deg, #ff4b4b, #ff6f6f);
-        color: white;
-        border-radius: 12px;
-        font-weight: bold;
-        padding: 0.6rem 1.2rem;
-        transition: 0.3s;
+    
+    section[data-testid="stSidebar"] { 
+        background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+        border-right: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.04);
+    }
+    
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background: transparent;
+    }
+    
+    .stTabs [data-baseweb="tab"] { 
+        background: #f1f3f5;
+        color: #495057;
+        border-radius: 12px 12px 0 0;
+        font-weight: 600;
+        padding: 12px 24px;
         border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
-    .stButton > button:hover {
-        transform: scale(1.05);
-        background: linear-gradient(45deg, #ff6f6f, #ff4b4b);
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: #e9ecef;
+        transform: translateY(-2px);
     }
+    
+    .stTabs [aria-selected="true"] { 
+        background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%) !important;
+        color: white !important;
+        box-shadow: 0 6px 20px rgba(230,57,70,0.35) !important;
+        transform: translateY(-2px);
+    }
+    
+    .upload-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow-light);
+        border: 2px dashed #dee2e6;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-section:hover {
+        border-color: #e63946;
+        box-shadow: var(--shadow-medium);
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .stApp { 
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+        color: #e9ecef;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    .hero { 
+        background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+        border: 1px solid rgba(255,107,107,0.15);
+        box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+        border-radius: 24px;
+        padding: 3rem 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,107,107,0.08) 0%, transparent 70%);
+        animation: pulse 8s ease-in-out infinite;
+    }
+    
+    .hero h1 { 
+        background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .hero p { 
+        color: #adb5bd;
+        font-size: 1.2rem;
+        font-weight: 400;
+        position: relative;
+        z-index: 1;
+        letter-spacing: 0.01em;
+    }
+    
+    section[data-testid="stSidebar"] { 
+        background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+        border-right: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    }
+    
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background: transparent;
+    }
+    
+    .stTabs [data-baseweb="tab"] { 
+        background: #2a2a2a;
+        color: #adb5bd;
+        border-radius: 12px 12px 0 0;
+        font-weight: 600;
+        padding: 12px 24px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        background: #333333;
+        transform: translateY(-2px);
+    }
+    
+    .stTabs [aria-selected="true"] { 
+        background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%) !important;
+        color: white !important;
+        box-shadow: 0 6px 20px rgba(255,107,107,0.4) !important;
+        transform: translateY(-2px);
+    }
+    
+    .upload-section {
+        background: #1a1a1a;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        border: 2px dashed #333333;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-section:hover {
+        border-color: #ff6b6b;
+        box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    50% { transform: scale(1.1) rotate(5deg); opacity: 0.8; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+/* Enhanced Buttons */
+.stButton > button {
+    background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+    color: white !important;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 0.85rem 2rem;
+    border: none;
+    box-shadow: 0 6px 24px rgba(230,57,70,0.3);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.02em;
+}
+
+.stButton > button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.stButton > button:hover::before {
+    left: 100%;
+}
+
+.stButton > button:hover,
+.stButton > button:focus,
+.stButton > button:active {
+    transform: translateY(-3px) scale(1.02);
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+    box-shadow: 0 12px 32px rgba(230,57,70,0.45);
+    color: white !important;
+}
+
+/* Download Buttons */
+.stDownloadButton > button {
+    background: linear-gradient(135deg, #20c997 0%, #38d9a9 100%);
+    color: white !important;
+    border-radius: 14px;
+    font-weight: 600;
+    padding: 0.7rem 1.8rem;
+    border: none;
+    box-shadow: 0 4px 16px rgba(32,201,151,0.3);
+}
+
+.stDownloadButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(32,201,151,0.4);
+    background: linear-gradient(135deg, #38d9a9 0%, #51cf66 100%);
+    color: white !important;
+}
+
+/* Enhanced Images */
+img {
+    border-radius: 16px;
+    box-shadow: var(--shadow-medium);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+img:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-heavy);
+}
+
+/* Progress bar */
+.stProgress > div > div > div > div {
+    background: linear-gradient(90deg, #e63946, #ff6b6b, #ff8787);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+/* Radio buttons */
+.stRadio > label {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+/* Sliders */
+.stSlider > div > div > div > div {
+    background: linear-gradient(90deg, #e63946, #ff6b6b);
+}
+
+/* Sidebar header */
+.css-1d391kg, [data-testid="stSidebarNav"] {
+    padding-top: 2rem;
+}
+
+/* File uploader */
+[data-testid="stFileUploader"] {
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+/* Checkboxes */
+.stCheckbox {
+    font-weight: 500;
+}
+
+/* Info messages */
+.stAlert {
+    border-radius: 12px;
+    box-shadow: var(--shadow-light);
+}
+
+/* Spinner */
+.stSpinner > div {
+    border-top-color: #e63946 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -56,7 +373,6 @@ st.markdown("""
 def load_model():
     num_classes = 2
     model_path = "deeplabv3_final.pth"
-
     model = deeplabv3_resnet50(weights=None, aux_loss=True)
     old_cls = model.classifier
     model.classifier = nn.Sequential(
@@ -65,7 +381,6 @@ def load_model():
         nn.BatchNorm2d(128), nn.ReLU(),
         nn.Conv2d(128, num_classes, kernel_size=1)
     )
-
     checkpoint = torch.load(model_path, map_location=device)
     model.load_state_dict(checkpoint, strict=False)
     model.to(device)
@@ -149,68 +464,103 @@ def extract_object(img, mask, bg_color=(0,0,0), transparent=False, custom_bg=Non
         return result.astype(np.uint8)
 
 # ================= Hero Section =================
-st.markdown("<div class='hero'><h1>🚀 AI Object Segmentation</h1><p>Cut out objects from images with smooth edges & style</p></div>", unsafe_allow_html=True)
+st.markdown("""
+<div class='hero'>
+    <h1>✨ AI Object Segmentation</h1>
+    <p>Transform your images with precision AI-powered object extraction</p>
+</div>
+""", unsafe_allow_html=True)
 
-# ================= Centered Banner Image =================
-with open("img.png", "rb") as f:
-    data = f.read()
-b64 = base64.b64encode(data).decode()
+# === Centered Banner Image ===
 st.markdown(
-    f"""
-    <div style='text-align:center; margin-top:20px;'>
-        <img src='data:image/png;base64,{b64}' width='300'/>
-        <p style='color:#ccc; margin-top:5px;'>AI Powered Segmentation</p>
+    """
+    <div style='text-align: center; margin-top: 20px;'>
+        <img src='img.png' width='320' alt='AI Powered Segmentation'/>
+        <p style='margin-top: 5px; font-style: italic;'>AI Powered Segmentation</p>
     </div>
     """,
     unsafe_allow_html=True
 )
 
 # ================= Sidebar Options =================
-st.sidebar.header("⚙️ Options")
-blur_strength = st.sidebar.slider("🎛️ Smoothness", 3, 21, 7, step=2)
-use_transparent = st.sidebar.checkbox("Use Transparent Background")
-tta_toggle = st.sidebar.checkbox("Use TTA for better quality", True)
-dilate_iter = st.sidebar.slider("Mask Dilation", 0, 5, 1)
+st.sidebar.markdown("### ⚙️ Segmentation Settings")
+st.sidebar.markdown("---")
 
-bg_type = st.sidebar.radio("Background Type", ["Solid Color","Gradient","Custom Image"])
+with st.sidebar.expander("🎨 Quality Settings", expanded=True):
+    tta_toggle = st.checkbox("🔄 High Quality Mode (TTA)", True, help="Uses Test-Time Augmentation for better results")
+    blur_strength = st.slider("✨ Edge Smoothness", 3, 21, 7, step=2, help="Higher values = softer edges")
+    dilate_iter = st.slider("📏 Mask Expansion", 0, 5, 1, help="Expand or shrink the mask")
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🎭 Background Settings")
+
+use_transparent = st.sidebar.checkbox("🔲 Transparent Background", help="Create PNG with transparency")
+bg_type = st.sidebar.radio("Background Style", ["Solid Color","Gradient","Custom Image"])
+
 gradient_colors = None  
 
 if bg_type == "Solid Color":
     bg_color = st.sidebar.color_picker("🎨 Background Color", "#000000")
     bg_tuple = tuple(int(bg_color.lstrip('#')[i:i+2],16) for i in (0,2,4))
     custom_bg = None
-
 elif bg_type == "Custom Image":
-    bg_file = st.sidebar.file_uploader("Upload Background", type=["jpg","png"])
+    bg_file = st.sidebar.file_uploader("📸 Upload Background Image", type=["jpg","png"])
     custom_bg = Image.open(bg_file).convert("RGB") if bg_file else None
     bg_tuple = (0,0,0)
-
 elif bg_type == "Gradient":
-    color1 = st.sidebar.color_picker("🎨 Gradient Start", "#000000")
-    color2 = st.sidebar.color_picker("🎨 Gradient End", "#ff0000")
+    col1_exp = st.sidebar.columns(2)
+    with col1_exp[0]:
+        color1 = st.color_picker("Start", "#000000")
+    with col1_exp[1]:
+        color2 = st.color_picker("End", "#ff0000")
     col1 = np.array([int(color1.lstrip('#')[i:i+2], 16) for i in (0,2,4)], dtype=np.uint8)
     col2 = np.array([int(color2.lstrip('#')[i:i+2], 16) for i in (0,2,4)], dtype=np.uint8)
     gradient_colors = (col1, col2)
     custom_bg = None
     bg_tuple = (0,0,0)
 
+st.sidebar.markdown("---")
+st.sidebar.info("💡 **Tip:** High Quality Mode works best for complex objects!")
+
 # ================= Mode Selection =================
-mode = st.radio("Select Mode", ["Single Image", "Multiple Images"])
+st.markdown("### 🖼️ Select Processing Mode")
+mode = st.radio("Select Processing Mode", ["Single Image", "Batch Processing"], horizontal=True, label_visibility="collapsed")
 
 # ================= Single Image =================
 if mode == "Single Image":
-    uploaded_file = st.file_uploader("📤 Upload an Image", type=["jpg","jpeg","png"])
+    st.markdown("---")
+    uploaded_file = st.file_uploader("📤 Upload Your Image", type=["jpg","jpeg","png"], help="Supported formats: JPG, PNG")
+    
     if uploaded_file is not None:
         img = Image.open(uploaded_file).convert("RGB")
         img_np = np.array(img)
-        st.image(img, caption="📷 Uploaded Image", width=250)
+        
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            st.image(img, caption="📷 Uploaded Image", use_container_width=True)
 
-        if st.button("✨ Generate Image"):
-            progress = st.progress(0)
-            with st.spinner("AI is segmenting your image..."):
+        st.markdown("---")
+        
+        col_btn1, col_btn2, col_btn3 = st.columns([1,1,1])
+        with col_btn2:
+            process_btn = st.button("✨ Process Image", use_container_width=True)
+        
+        if process_btn:
+            progress = st.progress(0, text="🔄 Initializing AI model...")
+            
+            with st.spinner("🎨 AI is working its magic..."):
                 for i in range(0,101,20):
+                    if i == 20:
+                        progress.progress(i, text="🔍 Analyzing image...")
+                    elif i == 40:
+                        progress.progress(i, text="🎯 Detecting objects...")
+                    elif i == 60:
+                        progress.progress(i, text="✂️ Segmenting...")
+                    elif i == 80:
+                        progress.progress(i, text="🎨 Refining edges...")
+                    else:
+                        progress.progress(i, text="✅ Finalizing...")
                     time.sleep(0.2)
-                    progress.progress(i)
 
                 img_tensor, orig_size, _ = preprocess_image(img)
                 mask_tensor = tta_predict(img_tensor) if tta_toggle else model(img_tensor)['out']
@@ -221,40 +571,70 @@ if mode == "Single Image":
                 result = extract_object(img_np, pred_mask, bg_color=bg_tuple, transparent=use_transparent, custom_bg=custom_bg, gradient=gradient_colors)
 
             progress.empty()
+            st.success("✅ Segmentation Complete!")
+            st.markdown("---")
 
-            result_rgb = cv2.cvtColor(result, cv2.COLOR_RGBA2RGB) if result.shape[2]==4 else result
-
-            tabs = st.tabs(["🖼️ Original vs Segmented", "↔️ Slider Comparison"])
+            tabs = st.tabs(["🖼️ Side by Side", "↔️ Interactive Comparison"])
+            
             with tabs[0]:
                 col1, col2 = st.columns(2)
-                col1.image(img_np, caption="📷 Original", width=250)
-                col2.image(result, caption="✨ Segmented", width=250)
+                with col1:
+                    st.markdown("**📷 Original**")
+                    st.image(img_np, use_container_width=True)
+                with col2:
+                    st.markdown("**✨ Segmented**")
+                    st.image(result, use_container_width=True)
 
-                buf_seg = BytesIO(); Image.fromarray(result).save(buf_seg, format="PNG")
-                st.download_button("📥 Download Segmented Image", buf_seg.getvalue(), "masked_image.png", "image/png")
-                if use_transparent:
-                    buf_trans = BytesIO(); Image.fromarray(result).save(buf_trans, format="PNG")
-                    st.download_button("📥 Download Transparent PNG", buf_trans.getvalue(), "transparent.png", "image/png")
+                st.markdown("---")
+                st.markdown("### 📥 Download Results")
+                
+                dl_col1, dl_col2 = st.columns(2)
+                with dl_col1:
+                    buf_seg = BytesIO()
+                    Image.fromarray(result).save(buf_seg, format="PNG")
+                    st.download_button("💾 Download Segmented", buf_seg.getvalue(), "segmented_image.png", "image/png", use_container_width=True)
+                
+                with dl_col2:
+                    if use_transparent:
+                        buf_trans = BytesIO()
+                        Image.fromarray(result).save(buf_trans, format="PNG")
+                        st.download_button("💾 Download Transparent", buf_trans.getvalue(), "transparent.png", "image/png", use_container_width=True)
 
-            img_small = cv2.resize(img_np, (250, int(250*img_np.shape[0]/img_np.shape[1])))
-            result_bg = extract_object(img_np, pred_mask, bg_color=bg_tuple, transparent=False, custom_bg=custom_bg, gradient=gradient_colors)
-            overlay_small = cv2.resize(result_bg, (250, int(250*result_bg.shape[0]/result_bg.shape[1])))
             with tabs[1]:
-                image_comparison(img1=img_small, img2=overlay_small, label1="Original", label2="Segmented with BG")
+                img_small = cv2.resize(img_np, (500, int(500*img_np.shape[0]/img_np.shape[1])))
+                result_bg = extract_object(img_np, pred_mask, bg_color=bg_tuple, transparent=False, custom_bg=custom_bg, gradient=gradient_colors)
+                overlay_small = cv2.resize(result_bg, (500, int(500*result_bg.shape[0]/result_bg.shape[1])))
+                image_comparison(img1=img_small, img2=overlay_small, label1="Original", label2="Segmented")
 
 # ================= Multiple Images =================
-elif mode == "Multiple Images":
-    uploaded_files = st.file_uploader("📤 Upload Multiple Images", type=["jpg","jpeg","png"], accept_multiple_files=True)
+elif mode == "Batch Processing":
+    st.markdown("---")
+    uploaded_files = st.file_uploader("📤 Upload Multiple Images", type=["jpg","jpeg","png"], accept_multiple_files=True, help="Process multiple images at once")
+    
     if uploaded_files:
+        st.markdown(f"### 📸 Uploaded {len(uploaded_files)} images")
+        
         images = [np.array(Image.open(f).convert("RGB")) for f in uploaded_files]
-        cols = st.columns(len(images))
-        for col, img_np in zip(cols, images):
-            col.image(img_np, width=200)
+        cols = st.columns(min(len(images), 4))
+        for idx, (col, img_np) in enumerate(zip(cols, images[:4])):
+            col.image(img_np, caption=f"Image {idx+1}", use_container_width=True)
+        
+        if len(images) > 4:
+            st.info(f"📋 {len(images)-4} more images ready for processing...")
 
-        if st.button("✨ Segment All Images"):
+        st.markdown("---")
+        
+        col_btn1, col_btn2, col_btn3 = st.columns([1,1,1])
+        with col_btn2:
+            process_all = st.button("✨ Process All Images", use_container_width=True)
+        
+        if process_all:
             results = []
-            progress = st.progress(0)
+            progress = st.progress(0, text="🚀 Starting batch processing...")
+            
             for i, img_np in enumerate(images):
+                progress.progress(int((i)/len(images)*100), text=f"🎨 Processing image {i+1} of {len(images)}...")
+                
                 img_tensor, orig_size, _ = preprocess_image(Image.fromarray(img_np))
                 mask_tensor = tta_predict(img_tensor) if tta_toggle else model(img_tensor)['out']
                 pred_mask = postprocess_mask(mask_tensor, orig_size, blur_strength=blur_strength)
@@ -262,17 +642,33 @@ elif mode == "Multiple Images":
                     pred_mask = cv2.dilate(pred_mask, np.ones((3,3),np.uint8), iterations=1)
                 result = extract_object(img_np, pred_mask, bg_color=bg_tuple, transparent=use_transparent, custom_bg=custom_bg, gradient=gradient_colors)
                 results.append(result)
-                progress.progress(int((i+1)/len(images)*100))
+            
+            progress.progress(100, text="✅ All images processed!")
+            time.sleep(0.5)
             progress.empty()
+            
+            st.success(f"✅ Successfully processed {len(results)} images!")
+            st.markdown("---")
+            st.markdown("### 🎉 Results")
 
-            cols = st.columns(len(results))
-            for col, result in zip(cols, results):
-                col.image(result, width=200)
+            cols = st.columns(min(len(results), 4))
+            for idx, (col, result) in enumerate(zip(cols, results[:4])):
+                col.image(result, caption=f"Result {idx+1}", use_container_width=True)
+            
+            if len(results) > 4:
+                with st.expander(f"👁️ View all {len(results)} results"):
+                    remaining_cols = st.columns(4)
+                    for idx, result in enumerate(results[4:], 5):
+                        remaining_cols[(idx-5) % 4].image(result, caption=f"Result {idx}", use_container_width=True)
 
+            st.markdown("---")
             zip_buffer = BytesIO()
             with zipfile.ZipFile(zip_buffer, "w") as zip_file:
                 for idx, result in enumerate(results):
                     buf = BytesIO()
                     Image.fromarray(result).save(buf, format="PNG")
                     zip_file.writestr(f"segmented_{idx+1}.png", buf.getvalue())
-            st.download_button("📥 Download All Segmented Images", zip_buffer.getvalue(), "segmented_images.zip", "application/zip")
+            
+            col_dl1, col_dl2, col_dl3 = st.columns([1,1,1])
+            with col_dl2:
+                st.download_button("📦 Download All as ZIP", zip_buffer.getvalue(), "segmented_images.zip", "application/zip", use_container_width=True)
