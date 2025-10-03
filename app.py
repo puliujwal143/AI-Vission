@@ -479,7 +479,7 @@ b64 = base64.b64encode(data).decode()
 st.markdown(
     f"""
     <div style='text-align:center; margin-top:20px;'>
-        <img src='data:image/png;base64,{b64}' width='400'/>
+        <img src='data:image/png;base64,{b64}' width='600'/>
         <p style='color:#ccc; margin-top:5px;'>AI Powered Segmentation</p>
     </div>
     """,
