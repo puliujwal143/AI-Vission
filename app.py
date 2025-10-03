@@ -9,6 +9,7 @@ from io import BytesIO
 from streamlit_image_comparison import image_comparison
 import zipfile
 import time
+import base64
 
 # ================= Device =================
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -466,7 +467,7 @@ def extract_object(img, mask, bg_color=(0,0,0), transparent=False, custom_bg=Non
 # ================= Hero Section =================
 st.markdown("""
 <div class='hero'>
-    <h1>✨ AI Object Segmentation</h1>
+    <h1>✨ SnapSeg</h1>
     <p>Transform your images with precision AI-powered object extraction</p>
 </div>
 """, unsafe_allow_html=True)
@@ -484,7 +485,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 
 # ================= Sidebar Options =================
 st.sidebar.markdown("### ⚙️ Segmentation Settings")
